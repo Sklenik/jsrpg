@@ -190,7 +190,6 @@ async function attackLoop() {
     };
 };
 
-//TODO delete this if not needed
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
