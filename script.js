@@ -27,6 +27,11 @@ class entity{
 
     draw(){
         // IMAGE + BORDER
+        ctx.fillStyle = "royalblue";
+        ctx.fillRect(this.x,this.y,this.size,this.size);
+        ctx.lineWidth = 3;
+        ctx.strokeRect(this.x,this.y,this.size,this.size);
+
         if (!this.drawMirrored) {
             ctx.drawImage(this.img,this.x+10,this.y+10,this.size-20,this.size-20);
         } else {
@@ -36,7 +41,6 @@ class entity{
             ctx.drawImage(this.img, 10, 10, this.size-20, this.size-20);
             ctx.restore();
         };
-        ctx.strokeRect(this.x,this.y,this.size,this.size);
         
         //HP FILL
         this.hpText = String(this.hp)+"/"+String(this.maxHp);
@@ -55,8 +59,9 @@ class entity{
         ctx.strokeRect(this.x,this.y + this.size + 10, this.size, 30);
         
         // HP TEXT
+        ctx.lineWidth = 1;
         ctx.fillStyle = "black";
-        ctx.font = "20px Arial";
+        ctx.font = "20px Arial ";
         ctx.textAlign="center"; 
         ctx.textBaseline = "middle";
         const metrics = ctx.measureText(this.hpText);      
@@ -281,6 +286,7 @@ function results(message,description,loot) {
     const resultsX = Math.floor(canvas.width/2)-Math.floor(resultsWidth/2);
     const resultsY = Math.floor(canvas.height/2)-Math.floor(resultsHeight/2);
 
+    ctx.lineWidth = 3;
     ctx.fillStyle = "slategray";
     ctx.fillRect(Math.floor(canvas.width/2)-Math.floor(resultsWidth/2),Math.floor(canvas.height/2) - Math.floor(resultsHeight/2),resultsWidth,resultsHeight);
     ctx.strokeRect(Math.floor(canvas.width/2)-Math.floor(resultsWidth/2),Math.floor(canvas.height/2) - Math.floor(resultsHeight/2),resultsWidth,resultsHeight);
@@ -297,6 +303,7 @@ function results(message,description,loot) {
     } else {
         ctx.fillText("fuck all, you are dead!",resultsX + resultsWidth/2, resultsY + 140);
     }
+    ctx.lineWidth = 1;
 };
 
 async function attackLoop() {
