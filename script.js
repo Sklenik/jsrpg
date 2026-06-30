@@ -211,6 +211,70 @@ function meleeAttack(speed=1) {
     });
 };
 
+function projectileVSMeleeAttack(speed=1) {
+    return new Promise(resolve => {
+        if (speed == 0) {
+            console.log('speed was 0')
+            resolve();
+            return;
+        };
+ 
+        const projectileSize = 80;
+        let exitLoop = false;
+        
+        let projectileX = 0;
+        if (speed > 0) {
+            projectileX = player.x+imgSize-projectileSize;
+        } else {
+            projectileX = enemy.x;
+        };
+
+        let returnToOriginalPosition = false;
+        let originalEnemyX = enemy.x;
+        
+        attackInterval = setInterval(() => {
+            projectileX += speed;
+
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            player.draw();
+            enemy.draw();
+
+            if (speed > 0) {
+                ctx.drawImage(player.projectile, projectileX,player.y+imgSize-projectileSize,projectileSize,projectileSize);
+                if (projectileX >= enemy.x) {
+                    enemy.hp -= player.attack;
+                    exitLoop = true;
+                };
+            };
+
+            if (!returnToOriginalPosition) {
+                if (speed < 0) {
+                    enemy.x += speed;
+                    if (enemy.x <= player.x+imgSize) {
+                        player.hp -= enemy.attack;
+                        returnToOriginalPosition = true;
+                    };
+                };
+            } else {
+                if (speed < 0) {
+                    enemy.x -= speed;
+                    if (enemy.x == originalEnemyX) {
+                        exitLoop = true;
+                    };
+                };
+            };
+
+            if (exitLoop) {
+                clearInterval(attackInterval);
+                ctx.clearRect(0,0, canvas.width, canvas.height);
+                player.draw();
+                enemy.draw();
+                resolve();
+            };
+        }, 1);
+    });
+};
+
 function results(message,description,loot) {
     const resultsWidth = 200;
     const resultsHeight = 200;
@@ -235,27 +299,16 @@ function results(message,description,loot) {
     }
 };
 
-async function projectileAttackLoop() {
+async function attackLoop() {
     let speed = -2;
     while (true) {
         speed = -speed;
-        await projectileAttack(speed);
-        if (enemy.hp <= 0) {
-            results("You won!", "Yay!", "nothing");
-            break;
-        } else if (player.hp <= 0) {
-            results("You died...", "Oops!","not implemented yet");
-            break;
-        };
-        await sleep(1000);
-    };
-};
 
-async function meleeAttackLoop() {
-    let speed = -2;
-    while (true) {
-        speed = -speed;
-        await meleeAttack(speed);
+        // TODO rework and implement attack pattern into entity object, tweak attack function accordingly
+        // await projectileAttack(speed);
+        // await meleeAttack(speed);
+        await projectileVSMeleeAttack(speed);
+        
         if (enemy.hp <= 0) {
             results("You won!", "Yay!", "nothing");
             break;
@@ -285,8 +338,7 @@ async function main(){
     player.draw();
     enemy.draw();
 
-    // attackLoop();
-    meleeAttackLoop();
+    attackLoop();
 };
 
 main();
