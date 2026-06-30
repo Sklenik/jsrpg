@@ -157,7 +157,7 @@ function results(message,description,loot) {
     const resultsX = Math.floor(canvas.width/2)-Math.floor(resultsWidth/2);
     const resultsY = Math.floor(canvas.height/2)-Math.floor(resultsHeight/2);
 
-    ctx.fillStyle = "beige";
+    ctx.fillStyle = "slategray";
     ctx.fillRect(Math.floor(canvas.width/2)-Math.floor(resultsWidth/2),Math.floor(canvas.height/2) - Math.floor(resultsHeight/2),resultsWidth,resultsHeight);
     ctx.strokeRect(Math.floor(canvas.width/2)-Math.floor(resultsWidth/2),Math.floor(canvas.height/2) - Math.floor(resultsHeight/2),resultsWidth,resultsHeight);
     
