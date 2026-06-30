@@ -12,7 +12,7 @@ let player;
 let enemy;
 
 class entity{
-    constructor(img,x,y,size,hp,drawMirrored=false,projectile,attack){
+    constructor(img,x,y,size,hp,drawMirrored=false,projectile,attack,attackType){
         this.img = img;
         this.x = x;
         this.y = y;
@@ -23,9 +23,12 @@ class entity{
         this.drawMirrored = drawMirrored;
         this.projectile = projectile;
         this.attack = attack;
+        this.projectileSize = 80;
+        this.originalX = x;
+        this.attackType = attackType;
     }
 
-    draw(){
+    draw() {
         // IMAGE + BORDER
         ctx.fillStyle = "royalblue";
         ctx.fillRect(this.x,this.y,this.size,this.size);
@@ -69,7 +72,7 @@ class entity{
         const textY = Math.floor(this.y + this.size + 10 + (30)/2);
 
         ctx.fillText(this.hpText, textX, textY);
-    }
+    };
 };
 
 function loadImage(path) {
@@ -109,162 +112,70 @@ async function loadImages() {
     }
 }
 
-function projectileAttack(speed=1) {
+function attackLoop(speed=1) {
     return new Promise(resolve => {
         if (speed == 0) {
             console.log('speed was 0')
             resolve();
             return;
         };
- 
-        const projectileSize = 80;
-        let exitLoop = false;
         
         let projectileX = 0;
         if (speed > 0) {
-            projectileX = player.x+imgSize-projectileSize;
+            projectileX = player.x + imgSize - player.projectileSize;
         } else {
             projectileX = enemy.x;
         };
+        let returnToOriginalPosition = false;
+        let exitLoop = false;
         
         attackInterval = setInterval(() => {
             ctx.clearRect(0,0, canvas.width, canvas.height);
             player.draw();
             enemy.draw();
-            projectileX += speed;
-
-            if (speed > 0) {
-                ctx.drawImage(player.projectile, projectileX,player.y+imgSize-projectileSize,projectileSize,projectileSize);
-                if (projectileX >= enemy.x) {
-                    enemy.hp -= player.attack;
-                    exitLoop = true;
-                };
-            } else {
-                ctx.drawImage(enemy.projectile, projectileX,enemy.y+imgSize-projectileSize,projectileSize,projectileSize);
-                if (projectileX <= player.x+imgSize) {
-                    player.hp -= enemy.attack;
-                    exitLoop = true;
-                };
-            };
-
-            if (exitLoop) {
-                clearInterval(attackInterval);
-                ctx.clearRect(0,0, canvas.width, canvas.height);
-                player.draw();
-                enemy.draw();
-                resolve();
-            };
-        }, 1);
-    });
-};
-
-function meleeAttack(speed=1) {
-    return new Promise(resolve => {
-        if (speed == 0) {
-            console.log('speed was 0')
-            resolve();
-            return;
-        };
- 
-        let exitLoop = false;
-        let returnToOriginalPosition = false;
-        let originalPlayerX = player.x;
-        let originalEnemyX = enemy.x;
-        
-        attackInterval = setInterval(() => {
             
-            if (!returnToOriginalPosition) {
-                if (speed > 0) {
-                    player.x += speed;
-                    if (player.x+imgSize >= enemy.x) {
+            if (speed > 0) {
+                if (player.attackType == "projectile") {
+                    projectileX += speed;
+                    ctx.drawImage(player.projectile, projectileX, player.y + imgSize - player.projectileSize, player.projectileSize, player.projectileSize);
+                    if (projectileX >= enemy.x) {
                         enemy.hp -= player.attack;
-                        returnToOriginalPosition = true;
-                    };
-                } else {
-                    enemy.x += speed;
-                    if (enemy.x <= player.x+imgSize) {
-                        player.hp -= enemy.attack;
-                        returnToOriginalPosition = true;
-                    };
-                };
-            } else {
-                if (speed > 0) {
-                    player.x -= speed;
-                    if (player.x == originalPlayerX) {
                         exitLoop = true;
                     };
                 } else {
-                    enemy.x -= speed;
-                    if (enemy.x == originalEnemyX) {
-                        exitLoop = true;
+                    if (!returnToOriginalPosition) {
+                        player.x += speed;
+                        if (player.x + imgSize >= enemy.x) {
+                            enemy.hp -= player.attack;
+                            returnToOriginalPosition = true;
+                        };
+                    } else {
+                        player.x -= speed;
+                        if (player.x == player.originalX) {
+                            exitLoop = true;
+                        };
                     };
                 };
-            };
-            
-            ctx.clearRect(0,0, canvas.width, canvas.height);
-            player.draw();
-            enemy.draw();
-
-            if (exitLoop) {
-                clearInterval(attackInterval);
-                ctx.clearRect(0,0, canvas.width, canvas.height);
-                player.draw();
-                enemy.draw();
-                resolve();
-            };
-        }, 1);
-    });
-};
-
-function projectileVSMeleeAttack(speed=1) {
-    return new Promise(resolve => {
-        if (speed == 0) {
-            console.log('speed was 0')
-            resolve();
-            return;
-        };
- 
-        const projectileSize = 80;
-        let exitLoop = false;
-        
-        let projectileX = 0;
-        if (speed > 0) {
-            projectileX = player.x+imgSize-projectileSize;
-        } else {
-            projectileX = enemy.x;
-        };
-
-        let returnToOriginalPosition = false;
-        let originalEnemyX = enemy.x;
-        
-        attackInterval = setInterval(() => {
-            projectileX += speed;
-
-            ctx.clearRect(0,0, canvas.width, canvas.height);
-            player.draw();
-            enemy.draw();
-
-            if (speed > 0) {
-                ctx.drawImage(player.projectile, projectileX,player.y+imgSize-projectileSize,projectileSize,projectileSize);
-                if (projectileX >= enemy.x) {
-                    enemy.hp -= player.attack;
-                    exitLoop = true;
-                };
-            };
-
-            if (!returnToOriginalPosition) {
-                if (speed < 0) {
-                    enemy.x += speed;
-                    if (enemy.x <= player.x+imgSize) {
+            } else if (speed < 0) {
+                if (enemy.attackType == "projectile") {
+                    projectileX += speed;
+                    ctx.drawImage(enemy.projectile, projectileX, enemy.y + imgSize - enemy.projectileSize,enemy.projectileSize,enemy.projectileSize);
+                    if (projectileX <= player.x + imgSize) {
                         player.hp -= enemy.attack;
-                        returnToOriginalPosition = true;
-                    };
-                };
-            } else {
-                if (speed < 0) {
-                    enemy.x -= speed;
-                    if (enemy.x == originalEnemyX) {
                         exitLoop = true;
+                    };
+                } else {
+                    if (!returnToOriginalPosition) {
+                        enemy.x += speed;
+                        if (enemy.x <= player.x + imgSize) {
+                            player.hp -= enemy.attack;
+                            returnToOriginalPosition = true;
+                        };
+                    } else {
+                        enemy.x -= speed;
+                        if (enemy.x == enemy.originalX) {
+                            exitLoop = true;
+                        };
                     };
                 };
             };
@@ -306,15 +217,31 @@ function results(message,description,loot) {
     ctx.lineWidth = 1;
 };
 
-async function attackLoop() {
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function main(){
+    // LOADING
+    const imagesLoaded = await loadImages();
+    if (!imagesLoaded) {
+        return;
+    };
+
+    // CREATE AND RENDER ENTITIES
+    player = new entity(playerImg, 10,10,imgSize,200,true,playerProjectileImg,20,"projectile");
+    
+    const enemyX = canvas.width - player.x - imgSize;
+    enemy = new entity(enemyImg,enemyX,player.y,imgSize,100,false,enemyProjectileImg,10,"melee");
+
+    player.draw();
+    enemy.draw();
+
+    // ATTACK LOOP
     let speed = -2;
     while (true) {
         speed = -speed;
-
-        // TODO rework and implement attack pattern into entity object, tweak attack function accordingly
-        // await projectileAttack(speed);
-        // await meleeAttack(speed);
-        await projectileVSMeleeAttack(speed);
+        await attackLoop(speed);
         
         if (enemy.hp <= 0) {
             results("You won!", "Yay!", "nothing");
@@ -325,27 +252,6 @@ async function attackLoop() {
         };
         await sleep(1000);
     };
-};
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function main(){
-    const imagesLoaded = await loadImages();
-    if (!imagesLoaded) {
-        return;
-    };
-
-    player = new entity(playerImg, 10,10,imgSize,200,true,playerProjectileImg,20);
-    
-    const enemyX = canvas.width - player.x - imgSize;
-    enemy = new entity(enemyImg,enemyX,player.y,imgSize,100,false,enemyProjectileImg,10);
-
-    player.draw();
-    enemy.draw();
-
-    attackLoop();
 };
 
 main();
